@@ -16,20 +16,75 @@ interface ErrorStrategy {
 }
 ```
 
-### propagateError
+### Basic Error Creation
 
-Allows one to wrap an error with more context while preserving the error type. For HTTP, the Status Code will be copied to the new error message. It can be desireable to propagate errors across technologies. Example:
+Here are some examples of how you might use this library:
 
-You are trying to respond to HTTP request and need to contact a gRPC API. If you want to propagate the gRPC errors as HTTP error, simply do the following:
+```
+const { unavailable, badRequest } = require('http-error-strategy')
+
+let thing
+try {
+  thing = createThing()
+} catch (e) {
+  throw badRequest('error creating thing', e)
+}
+
+try {
+  save(thing)
+} catch (e) {
+  throw unavailable('error saving thing', e)
+}
+```
+
+### Propagating Technology-Specific Error Metadata
+
+It can be the case that the technology used to trigger some processing is not the same as technology used to trigger downstream processing. The `propagate` method allows one to take an HTTP error and generate an error using another ErrorStrategy implementation.
+
+Consider a gRPC request handler that invokes an HTTP API. Say we would like to return the HTTP status code as a GRPC status code. Here's how you might accomplish this:
 
 ```javascript
 const HttpErrorStrategy = require('http-error-strategy')
 const { propagate } = require('grpc-error-strategy')
 
 try {
-  subOperationOverGrpc()
+  httpRequestToSaveThing()
 } catch (e) {
-  throw propagate('unable to do overall operation', e, HttpErrorStrategy)
+  // the following will return an equivalent gRPC error
+  throw HttpErrorStrategy.propagate('unable to save thing', e, GrpcErrorStrategy)
+}
+```
+
+## Usage Patterns to Consider
+
+It may be wise to decouple your code from the technology used to trigger it (see [ports and adapters](http://wiki.c2.com/?PortsAndAdaptersArchitecture)). You may even want to support triggering your code in different ways - HTTP, gRPC, CLI.
+
+Therefore, consider accepting ErrorStrategy instances instead of importing them directly to keep code agnostic of the triggering technology:
+
+```
+// you might consider destructuring ErrorStrategy into the methods you need...
+const anOperation = (ErrorStrategy) => (input) => {
+  let thing
+  try {
+    thing = createThing()
+  } catch (e) {
+    throw ErrorStrategy.badRequest('error creating thing', e)
+  }
+}
+```
+
+If your code is triggering specific downstream technology, then importing the appropriate ErrorStrategy is reasonable:
+
+```
+const HttpErrorStrategy = require('http-error-strategy') // legit, you know it's HTTP your calling
+
+const anOperation = (ErrorStrategy) => (input) => {
+  try {
+    httpRequestToSaveThing()
+  } catch (e) {
+    // returns an error formatted as per the passed in ErrorStrategy
+    throw HttpErrorStrategy.propagate('unable to save thing', e, ErrorStrategy)
+  }
 }
 ```
 
