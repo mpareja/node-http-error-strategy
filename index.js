@@ -2,6 +2,7 @@ const errors = [
   { code: 400, type: 'badRequest' },
   { code: 401, type: 'unauthorized' },
   { code: 404, type: 'notFound' },
+  { code: 500, type: 'badImplementation' },
   { code: 501, type: 'notImplemented' },
   { code: 503, type: 'unavailable' }
 ]
@@ -20,7 +21,8 @@ for (let { type, code } of errors) {
   }
 }
 
-module.exports.propagate = (msg, inner, innerStrategy) => {
+module.exports.propagate = (msg, inner, targetStrategy) => {
   const type = errorsByCode[inner.statusCode]
-  return innerStrategy[type](msg, inner)
+  const func = targetStrategy[type]
+  return func ? func(msg, inner) : module.exports.unavailable(msg, inner)
 }

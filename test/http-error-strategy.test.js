@@ -1,4 +1,4 @@
-const ErrorStrategy = require('../')
+const HttpErrorStrategy = require('../')
 
 const A_DESCRIPTION = 'my description'
 const A_PARENT_DESCRIPTION = 'parent description'
@@ -11,21 +11,24 @@ const A_PARENT_DESCRIPTION = 'parent description'
   { code: 503, type: 'unavailable' }
 ].forEach(testError)
 
-describe('propagate', () => {
-  const { propagate } = ErrorStrategy
-  const inner = ErrorStrategy.unavailable(A_DESCRIPTION)
-  const outer = propagate(A_PARENT_DESCRIPTION, inner, ErrorStrategy)
+describe('propagate status information from inner HTTP errors', () => {
+  const inner = HttpErrorStrategy.unavailable(A_DESCRIPTION)
+  const outer = HttpErrorStrategy.propagate(A_PARENT_DESCRIPTION, inner, HttpErrorStrategy)
 
-  it('has description', () => {
+  it('outer error has description', () => {
     expect(outer).toEqual(new Error(A_PARENT_DESCRIPTION))
   })
 
-  it('includes the inner status code', () => {
+  it('outer error includes the inner status code', () => {
     expect(outer.statusCode).toEqual(inner.statusCode)
   })
 
-  it('supports other error strategies', () => {
-    const OtherErrorStrategy = {
+  it('outer error includes the inner error', () => {
+    expect(outer.inner).toBe(inner)
+  })
+
+  describe('when propagating HTTP errors to other error strategies', () => {
+    const TargetErrorStrategy = {
       unavailable: (msg, inner) => {
         const error = new Error(msg)
         error.inner = inner
@@ -33,29 +36,49 @@ describe('propagate', () => {
         return error
       }
     }
-    const outer = propagate(A_PARENT_DESCRIPTION, inner, OtherErrorStrategy)
+    const httpError = HttpErrorStrategy.unavailable(A_DESCRIPTION)
+    const targetError = HttpErrorStrategy.propagate(A_PARENT_DESCRIPTION, httpError, TargetErrorStrategy)
+
+    it('outer error has description', () => {
+      expect(targetError).toEqual(new Error(A_PARENT_DESCRIPTION))
+    })
+
+    it('outer error does NOT include the HTTP status code field', () => {
+      expect(targetError.statusCode).toBe(undefined)
+    })
+
+    it('outer error includes the target strategy\'s error details', () => {
+      expect(targetError.otherStatusField).toBe('UNAVAILABLE')
+    })
+
+    it('outer error includes the inner error', () => {
+      expect(targetError.inner).toBe(httpError)
+    })
+  })
+
+  it('propagates non-HTTP errors without specifying a status code', () => {
+    const nonHttpError = new Error(A_DESCRIPTION)
+    const outer = HttpErrorStrategy.propagate(A_PARENT_DESCRIPTION, nonHttpError, HttpErrorStrategy)
+
     expect(outer).toEqual(new Error(A_PARENT_DESCRIPTION))
-    expect(outer.statusCode).toBe(undefined)
-    expect(outer.otherStatusField).toBe('UNAVAILABLE')
-    expect(outer.inner).toBe(inner)
   })
 })
 
 function testError ({ type, code }) {
   describe(type, () => {
     it('has description', () => {
-      const error = ErrorStrategy[type](A_DESCRIPTION)
+      const error = HttpErrorStrategy[type](A_DESCRIPTION)
       expect(error).toEqual(new Error(A_DESCRIPTION))
     })
 
     it(`has a status code of ${code}`, () => {
-      const error = ErrorStrategy[type]()
+      const error = HttpErrorStrategy[type]()
       expect(error.statusCode).toBe(code)
     })
 
     it('includes inner error', () => {
       const inner = new Error('bogus')
-      const error = ErrorStrategy[type](A_DESCRIPTION, inner)
+      const error = HttpErrorStrategy[type](A_DESCRIPTION, inner)
       expect(error.inner).toBe(inner)
     })
   })
