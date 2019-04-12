@@ -32,3 +32,7 @@ try {
   throw propagate('unable to do overall operation', e, HttpErrorStrategy)
 }
 ```
+
+## Release Management
+
+GitHub Actions are used to run linting, tests and code coverage on git push. Tags are used to create releases. Once a release is created, an action will cause the npm package to published.
