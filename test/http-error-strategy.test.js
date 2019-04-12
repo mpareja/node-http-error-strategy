@@ -7,6 +7,7 @@ const A_PARENT_DESCRIPTION = 'parent description'
   { code: 400, type: 'badRequest' },
   { code: 401, type: 'unauthorized' },
   { code: 404, type: 'notFound' },
+  { code: 500, type: 'badImplementation' },
   { code: 501, type: 'notImplemented' },
   { code: 503, type: 'unavailable' }
 ].forEach(testError)

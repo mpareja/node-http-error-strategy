@@ -24,5 +24,5 @@ for (let { type, code } of errors) {
 module.exports.propagate = (msg, inner, targetStrategy) => {
   const type = errorsByCode[inner.statusCode]
   const func = targetStrategy[type]
-  return func ? func(msg, inner) : module.exports.unavailable(msg, inner)
+  return func ? func(msg, inner) : module.exports.badImplementation(msg, inner)
 }
