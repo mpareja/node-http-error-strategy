@@ -22,7 +22,7 @@ Allows one to wrap an error with more context while preserving the error type. F
 
 You are trying to respond to HTTP request and need to contact a gRPC API. If you want to propagate the gRPC errors as HTTP error, simply do the following:
 
-```
+```javascript
 const { propagate } = require('http-error-strategy')
 const GrpcErrorStrategy = require('grpc-error-strategy')
 
