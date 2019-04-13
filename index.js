@@ -1,7 +1,8 @@
 const errors = [
   { code: 400, type: 'badRequest' },
-  { code: 401, type: 'unauthorized' },
+  { code: 403, type: 'forbidden' },
   { code: 404, type: 'notFound' },
+  { code: 412, type: 'preconditionFailed' },
   { code: 500, type: 'badImplementation' },
   { code: 501, type: 'notImplemented' },
   { code: 503, type: 'unavailable' }
