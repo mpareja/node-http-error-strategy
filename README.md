@@ -45,7 +45,7 @@ Consider a gRPC request handler that invokes an HTTP API. Say we would like to r
 
 ```javascript
 const HttpErrorStrategy = require('http-error-strategy')
-const { propagate } = require('grpc-error-strategy')
+const GrpcErrorStrategy = require('grpc-error-strategy')
 
 try {
   httpRequestToSaveThing()
@@ -76,14 +76,14 @@ const anOperation = (ErrorStrategy) => (input) => {
 If your code is triggering specific downstream technology, then importing the appropriate ErrorStrategy is reasonable:
 
 ```javascript
-const HttpErrorStrategy = require('http-error-strategy') // legit, you know it's HTTP your calling
+const { propagate } = require('http-error-strategy') // legit, you know it's HTTP your calling
 
 const anOperation = (ErrorStrategy) => (input) => {
   try {
     httpRequestToSaveThing()
   } catch (e) {
     // returns an error formatted as per the passed in ErrorStrategy
-    throw HttpErrorStrategy.propagate('unable to save thing', e, ErrorStrategy)
+    throw propagate('unable to save thing', e, ErrorStrategy)
   }
 }
 ```
