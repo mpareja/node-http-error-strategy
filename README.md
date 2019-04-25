@@ -1,5 +1,7 @@
 # http-error-strategy
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/mpareja/node-http-error-strategy.svg)](https://greenkeeper.io/)
+
 An HTTP implementation of the [error strategy interface](#error-strategy-interface).
 
 ## ErrorStrategy Interface
