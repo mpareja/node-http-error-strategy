@@ -83,5 +83,10 @@ function testError ({ type, code }) {
       const error = HttpErrorStrategy[type](A_DESCRIPTION, inner)
       expect(error.inner).toBe(inner)
     })
+
+    it('excludes inner key if none provider', () => {
+      const error = HttpErrorStrategy[type](A_DESCRIPTION)
+      expect(error).not.toHaveProperty('inner')
+    })
   })
 }
