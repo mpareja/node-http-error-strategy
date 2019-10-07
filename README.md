@@ -77,6 +77,21 @@ const anOperation = (ErrorStrategy) => (input) => {
 }
 ```
 
+If only depending on a single triggering technology, consider hiding the technology specific error-strategy by a layer of indirection:
+
+```javascript
+const { badRequest } = require('./error-strategy') // use whatever we're using across all operations
+
+const anOperation = (input) => {
+  let thing
+  try {
+    thing = createThing()
+  } catch (e) {
+    throw badRequest('error creating thing', e)
+  }
+}
+```
+
 If your code is triggering specific downstream technology, then importing the appropriate ErrorStrategy is reasonable:
 
 ```javascript
